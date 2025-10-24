@@ -1,0 +1,63 @@
+# AUTO TASK PLANNING — STRICT v3.2 (en-US, hardened)
+
+## Load EXACTLY these files (and nothing else)
+- workspace_spec.yaml
+- docs/governance_master.md            # authoritative governance
+- AGENTS.md
+- docs/plan/PLAN.txt
+- docs/plan/feature_plan.jsonl
+- docs/plan/CHECKPOINT.json            # only if it already exists
+
+## Scope of this run (PLANNING-ONLY)
+- You may read/modify ONLY: docs/plan/PLAN.txt, docs/plan/feature_plan.jsonl, docs/plan/REPORT.md,
+  docs/progress.md, docs/status.md, docs/plan/CHECKPOINT.json, docs/tasks/*.md
+- Do NOT create or edit application code, build files, configs, or governance files in this planning run.
+
+## Non-negotiable Preflight (ABORT BEFORE WRITE on FAIL)
+- Governance path: workspace_spec.yaml.governance.master == /docs/governance_master.md
+- Language: en-US only (this file, outputs, rationales)
+- Single-stack: use exactly stack.selection profile; do not reference other stacks
+- Capsule IDs: ALL IDs must match ^KAP-[0-9]{3}$ AND be unique across feature_plan.jsonl
+- Allowed Surface policy: every capsule must include a minimal, explicit allowed_surface array
+- Planning-surface only: you will NOT touch backend/** or frontend/** in this run
+- Output contract: new files → PATH blocks; edits → unified diffs; rationale ≤ 6 lines/block
+
+If any preflight check fails: STOP, write `PATH: docs/plan/CHECKPOINT.json` with
+{ "generated": [...], "remaining": [...], "last_update": "<ISO>", "notes": "<why>" } and return.
+
+## Objective
+Produce a clean, English-only planning set with deterministic structure:
+1) Normalize `docs/plan/PLAN.txt`
+   - First entry must be: `KAP-000 – Project Skeleton & Scaffolding`
+   - For each capsule include: size, phase_plan, allowed_surface (minimal), acceptance (≥2), artifacts_expected
+   - No duplicate capsules; English wording; no template placeholders
+2) Normalize `docs/plan/feature_plan.jsonl`
+   - ≥5 lines total (KAP-000 plus ≥4 more)
+   - Each line is a valid JSON object with fields:
+     { "id","title","size","phase_plan","allowed_surface","acceptance","artifacts_expected" }
+   - IDs unique; IDs must match ^KAP-[0-9]{3}$
+3) Write/update `docs/plan/REPORT.md` (planning section) with a short summary of changes
+4) Update progress/status:
+   - `docs/progress.md`: add one dated row for “Planning normalized”
+   - `docs/status.md`: english “Overview” block with normalized percentages (integers with %; no duplicates)
+5) If work cannot finish due to token/time: write `docs/plan/CHECKPOINT.json` with a precise remaining list
+
+## Deliverables (must appear in the output)
+- For every created file: a full `PATH: <relative>` block with complete content
+- For every edited file: a correct unified diff
+- Final section “Rationale” ≤ 6 lines explaining key decisions (no more)
+
+## Acceptance checks (self-eval printed at the end)
+- PASS if:
+  - governance_master.md loaded AND referred to by spec
+  - all capsule IDs valid & unique; English-only content
+  - PLAN.txt begins with KAP-000 and contains ≥5 capsules total
+  - feature_plan.jsonl has the same set of IDs as PLAN.txt (no drift)
+  - allowed_surface per capsule contains ONLY planning-safe paths for this run (no backend/**, frontend/** here)
+  - progress/status/report updated and percentages normalized
+- Otherwise: FAIL with CHECKPOINT.json and explicit reasons.
+
+# Start now:
+- Run Preflight. If PASS → normalize PLAN.txt and feature_plan.jsonl exactly as specified.
+- Respect budgets: ≤700 LOC total, ≤12 files touched, rationale ≤6 lines/block.
+- Never generate lockfiles/caches; never write secrets.

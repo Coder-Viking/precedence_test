@@ -1,0 +1,34 @@
+KAP-000 – Project Skeleton & Scaffolding
+size: M
+phase_plan: P1 – backend/frontend skeleton • P2 – build hardening • P3 – demo & docs
+allowed_surface: backend/**, frontend/**, README.md, docs/**
+acceptance:
+  - Backend starts with health endpoint  
+  - Frontend dev server starts with placeholder  
+artifacts_expected:
+  - PATH: backend/pom.xml  
+  - PATH: frontend/package.json  
+  - unified diff README.md  
+
+
+KAP-010 – API Backbone & Health
+size: M
+phase_plan: P1 – Health Endpoint • P2 – Tests • P3 – CI
+allowed_surface: backend/**, docs/**, .github/workflows/ci.yml
+acceptance:
+  - /api/health liefert Build- und DB-Status
+  - mvn verify grün
+artifacts_expected:
+  - PATH: backend/src/main/java/.../HealthController.java
+  - unified diff .github/workflows/ci.yml
+
+KAP-020 – Frontend Shell & Routing
+size: M
+phase_plan: P1 – Routing • P2 – State • P3 – Accessibility
+allowed_surface: frontend/**, docs/**, README.md
+acceptance:
+  - Routen `/` und `/tasks` vorhanden
+  - `npm run build` grün
+artifacts_expected:
+  - PATH: frontend/src/App.tsx
+  - PATH: frontend/src/routes/index.tsx

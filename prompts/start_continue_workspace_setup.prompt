@@ -1,0 +1,38 @@
+# start_continue_workspace_setup.prompt  (STRICT v3.2)
+
+## Context to load
+- `workspace_spec.yaml`
+- `docs/governance_master.md`
+- `AGENTS.md`
+- (if present) `docs/plan/PLAN.txt`, `docs/plan/feature_plan.jsonl`
+
+## Objective
+Perform the *initial workspace setup* deterministically and **continue automatically** until all artifacts declared
+in `generate:` are present and valid (no governance FAIL). You **must** resume from checkpoint until completion.
+
+## Hard Rules
+- Single-Stack via `stack.selection` (or profiles); disable all others logically.
+- Idempotent: only create missing files; modify existing ones via unified diff.
+- Output contract: `PATH:` blocks for new files; unified diffs for edits; max rationale lines = 6.
+- ENV/YAML mirror: `.env.sample` must contain every variable referenced in `application.yml.example` and vice versa.
+- Railway: exactly one start command per service; backend health `/actuator/health` (or stack-appropriate).
+- Never create lockfiles or secrets; instead print install/run instructions.
+- If token/time/budget constraints arise: **STOP WITHOUT WRITING** off-surface content and write `docs/plan/CHECKPOINT.json`.
+
+## Continue Logic (Autonomous)
+1) If `docs/plan/CHECKPOINT.json` exists and has `remaining` items, **resume immediately** and continue the setup steps.
+2) Repeat execution until `remaining` is empty and all `generate:` artifacts pass governance checks.
+3) On completion, produce:
+   - `docs/plan/REPORT.md` (summary of generated artifacts)
+   - `docs/plan/SELF_EVAL.md` (10 gates PASS/FAIL, with minimal diffs to fix)
+   - Final line in output: `ALL SETUP COMPLETE`
+
+## Actions
+- Create/normalize all artifacts from `generate:` (workspace_spec.yaml).
+- Ensure README has sections: stack, how_to_run, plan_links.
+- Normalize `docs/status.md` (overview/risks).
+- Update `docs/progress.md` with ISO date entry for setup.
+
+## Output
+- Only `PATH:` blocks for new files and unified diffs for modifications.
+- Max 6 lines rationale per block.

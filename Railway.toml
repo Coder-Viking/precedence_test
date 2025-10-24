@@ -1,0 +1,20 @@
+# Railway configuration – Spring + React (PulseGrid)
+# Hinweis: Platzhalter werden durch Codex/Runner aus workspace_spec.yaml ersetzt.
+
+[project]
+name = "PulseGrid"
+
+[services.backend]
+# Startet das Spring Boot Backend
+command = "bash -lc 'cd backend && mvn -q spring-boot:run'"
+healthcheckPath = "/actuator/health"
+restartPolicyType = "ON_FAILURE"
+
+[services.frontend]
+# Startet das React-Frontend (Vite)
+command = "bash -lc 'cd frontend && npm ci && npm run preview -- --host 0.0.0.0 --port ${FRONTEND_PORT:-5173}'"
+restartPolicyType = "ON_FAILURE"
+
+[plugins.postgres]
+enabled = true
+# DATABASE_URL wird von Railway bereitgestellt / über ENV gesetzt.

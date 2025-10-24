@@ -1,0 +1,211 @@
+# ========================================================
+# Condensed Workspace Specification (v3.2 – Hardened, Generic Stacks)
+# Stand: <FILL_YYYY-MM-DD>
+# Ziel: Deterministischer Setup-Lauf ohne Vermischungen (Template ↔ Projekt),
+#       vollständige Pflicht-Artefakte, Single-Stack via Profile.
+# ========================================================
+
+project:
+  name: "<PROJECT_NAME>"
+  code_name: "<PROJECT_CODE>"
+  description: "<ONE_SENTENCE_DESCRIPTION>"
+  owner: "<OWNER>"
+  license: MIT
+  visibility: private
+  default_branch: main
+  repo_url: "<REPO_URL>"
+
+stack:
+  selection: "<profile_id>"   # e.g. "spring-react", "rust-axum-vite", "node-express-react"
+
+  backends:
+    - id: "spring-boot"
+      language: "java"
+      runtime: "jvm"
+      version: "21"
+      framework: "spring-boot"
+      folder: "backend"
+      build: { command: "mvn -q clean package -DskipTests", artifacts: ["target/*.jar"] }
+      run:
+        command: "mvn -q spring-boot:run"
+        port_env: "BACKEND_PORT"
+        default_port: 8080
+      health: { path: "/actuator/health", expect: "UP" }
+
+    - id: "dotnet-webapi"
+      language: "csharp"
+      runtime: "dotnet"
+      version: "8.0"
+      framework: "aspnet"
+      folder: "backend"
+      build: { command: "dotnet build" }
+      run:
+        command: "dotnet run --project backend"
+        port_env: "BACKEND_PORT"
+        default_port: 8080
+      health: { path: "/health" }
+
+    - id: "node-express"
+      language: "javascript"
+      runtime: "node"
+      version: "18"
+      framework: "express"
+      folder: "backend"
+      build: { command: "npm ci --prefix backend" }
+      run:
+        command: "npm run --prefix backend start"
+        port_env: "BACKEND_PORT"
+        default_port: 8080
+      health: { path: "/health" }
+
+    - id: "rust-axum"
+      language: "rust"
+      runtime: "native"
+      version: "1.80"
+      framework: "axum"
+      folder: "backend"
+      build: { command: "cargo build --release" }
+      run:
+        command: "cargo run --release"
+        port_env: "BACKEND_PORT"
+        default_port: 8080
+      health: { path: "/health" }
+
+  frontends:
+    - id: "react-vite"
+      language: "typescript"
+      runtime: "node"
+      version: "18"
+      framework: "react"
+      folder: "frontend"
+      build: { command: "npm ci --prefix frontend && npm run --prefix frontend build", artifacts: ["frontend/dist/**"] }
+      run:
+        command: "npm run --prefix frontend dev -- --host 0.0.0.0 --port ${FRONTEND_PORT:-5173}"
+        port_env: "FRONTEND_PORT"
+        default_port: 5173
+
+    - id: "angular"
+      language: "typescript"
+      runtime: "node"
+      version: "18"
+      framework: "angular"
+      folder: "frontend"
+      build: { command: "npm ci --prefix frontend && npm run --prefix frontend build" }
+      run:
+        command: "npm run --prefix frontend start -- --host 0.0.0.0 --port ${FRONTEND_PORT:-4200}"
+        port_env: "FRONTEND_PORT"
+        default_port: 4200
+
+    - id: "vue-vite"
+      language: "typescript"
+      runtime: "node"
+      version: "18"
+      framework: "vue"
+      folder: "frontend"
+      build: { command: "npm ci --prefix frontend && npm run --prefix frontend build" }
+      run:
+        command: "npm run --prefix frontend preview -- --host 0.0.0.0 --port ${FRONTEND_PORT:-5173}"
+        port_env: "FRONTEND_PORT"
+        default_port: 5173
+
+    - id: "sveltekit"
+      language: "typescript"
+      runtime: "node"
+      version: "18"
+      framework: "sveltekit"
+      folder: "frontend"
+      build: { command: "npm ci --prefix frontend && npm run --prefix frontend build" }
+      run:
+        command: "npm run --prefix frontend dev -- --host 0.0.0.0 --port ${FRONTEND_PORT:-5173}"
+        port_env: "FRONTEND_PORT"
+        default_port: 5173
+
+  profiles:
+    - id: "spring-react"
+      backend: "spring-boot"
+      frontend: "react-vite"
+    - id: "dotnet-angular"
+      backend: "dotnet-webapi"
+      frontend: "angular"
+    - id: "rust-axum-vite"
+      backend: "rust-axum"
+      frontend: "react-vite"
+    - id: "node-express-react"
+      backend: "node-express"
+      frontend: "react-vite"
+
+database:
+  prod: "PostgreSQL"
+  dev: "H2"
+
+ai:
+  provider: "OpenAI"
+  model: "gpt-5-codex"
+  integration: "Responses API + Webhook"
+
+ci_cd:
+  ci: "GitHub Actions"
+  deploy: "Railway"
+  region: "fra"
+
+governance:
+ master: "/docs/governance_master.md"
+   agents: "/AGENTS.md"
+   codex_lite: "/docs/codex_lite.md"
+   phases: ["P1","P2","P3"]
+   capsule_strategy: "hybrid"
+   require_demo_after_P1: true
+   auto_merge_if_tests_green: true
+   language: "en-US"        # enforce English-only outputs
+
+deployment:
+  railway_toml: "/Railway.toml"
+  railway_yml: "/railway.yml"
+  domain: "<DEPLOY_DOMAIN>"
+  enable_postgres_plugin: true
+  env:
+    OPENAI_API_KEY: "env:OPENAI_API_KEY"
+    OPENAI_MODEL: "env:OPENAI_MODEL?gpt-5-codex"
+    GITHUB_APP_ID: "env:GITHUB_APP_ID"
+    GITHUB_APP_PRIVATE_KEY: "env:GITHUB_APP_PRIVATE_KEY"
+    DATABASE_URL: "env:DATABASE_URL"
+    DB_USER: "env:DB_USER?postgres"
+    DB_PASSWORD: "env:DB_PASSWORD?postgres"
+    BACKEND_PORT: "env:BACKEND_PORT?8080"
+    FRONTEND_PORT: "env:FRONTEND_PORT?5173"
+
+generate:
+  # Nur fehlende Dateien erzeugen (idempotent).
+  - "README.md"
+  - ".env.sample"
+  - "application.yml.example"
+  - "Railway.toml"
+  - "railway.yml"
+  - ".github/pull_request_template.md"
+  - "docs/governance_master.md"
+  - "AGENTS.md"
+  - "docs/codex_lite.md"
+  - "docs/plan/PLAN.txt"
+  - "docs/plan/feature_plan.jsonl"
+  - "docs/plan/REPORT.md"
+  - "docs/progress.md"
+  - "docs/status.md"
+  - "docs/adr/0001-architecture-foundation.md"
+
+normalization:
+   enforce_single_stack: true
+   forbid_template_text_in_project_files: true
+   forbid_duplicate_keys_in_env: true
+   require_plan_starts_with_KAP000: true
+   require_pr_template_present: true
+   status_remove_duplicates: true
+   status_normalize_percentages: true
+   enforce_allowed_surface_per_capsule: true
+   require_capsule_id_in_pr_title: true
+   require_english_outputs: true   
+   enforce_master_governance_path: "/docs/governance_master.md"
+
+output_contract:
+  require_path_blocks_for_new_files: true
+  require_unified_diff_for_edits: true
+  rationale_max_lines: 6

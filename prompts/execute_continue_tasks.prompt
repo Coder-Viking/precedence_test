@@ -1,0 +1,39 @@
+# execute_continue_tasks.prompt  (STRICT v3.2 – one-by-one capsules)
+
+## Context to load
+- `workspace_spec.yaml`
+- `docs/governance_master.md`
+- `AGENTS.md`
+- `docs/plan/PLAN.txt`
+- `docs/plan/feature_plan.jsonl`
+
+## Objective
+Execute capsules **one by one** (next-open) and **continue automatically** until all selected capsules are complete.
+Respect Allowed Surface strictly. Never write outside the current capsule’s allowed paths.
+
+## Execution Strategy
+- Determine target capsule:
+  1) If `docs/plan/CHECKPOINT.json` exists, take `remaining[0]`.
+  2) Otherwise, take the lowest-numbered capsule from `feature_plan.jsonl` with missing artifacts.
+  3) If a capsule ID is present in the branch name or PR title, prefer that ID.
+- Two-pass mode per capsule:
+  - Pass A (skeleton): minimal compilable artifacts (classes/routes/configs).
+  - Pass B (small): minimal tests/docs if budget remains.
+
+## Hard Rules
+- Idempotent writes; use PATH/diff format; rationale ≤6 lines per block.
+- No lockfiles, no secrets.
+- If any **governance violation** (off-surface, mixed-stack, env/yaml mismatch) is detected:
+  - **STOP WITHOUT WRITING**, output the reason, and write `docs/plan/CHECKPOINT.json`.
+- Update after each capsule:
+  - `docs/progress.md` (ISO date, capsule id, short note)
+  - `docs/status.md` (overview %, risks) without duplicate lines
+  - `docs/plan/REPORT.md` section “Executed: KAP-xxx” with artifact list
+
+## Continue Logic
+- If `CHECKPOINT.json` exists with `remaining`, immediately resume with the next capsule.
+- Finish when there are no remaining capsules or all acceptance criteria are met.
+- Then produce `docs/plan/SELF_EVAL.md` and print: `ALL CAPSULES COMPLETE`.
+
+## Output
+- Strict PATH/unified diff blocks only; rationale limits apply.
